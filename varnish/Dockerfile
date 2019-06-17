@@ -3,13 +3,8 @@ FROM debian:stretch
 RUN \
   useradd -r -s /bin/false varnishd
 
-RUN echo "deb http://deb.debian.org/debian stretch main" >/etc/apt/sources.list
-RUN echo "deb-src http://deb.debian.org/debian stretch main" >/etc/apt/sources.list
-RUN echo "deb http://deb.debian.org/debian stretch main contrib non-free">/etc/apt/sources.list
-
-
-# Install Varnish source build dependencies.
-# RUN printf "deb http://archive.debian.org/debian/ jessie maindeb-src http://archive.debian.org/debian/ jessie maindeb http://security.debian.org jessie/updates maindeb-src http://security.debian.org jessie/updates main" > /etc/apt/sources.list
+RUN \
+  echo "deb http://deb.debian.org/debian stretch main" >/etc/apt/sources.list
 
 RUN \
   apt-get update && apt-get install -y --no-install-recommends \
@@ -46,7 +41,7 @@ RUN \
 COPY start-varnishd.sh /usr/local/bin/start-varnishd
 
 ENV VARNISH_PORT 80
-ENV VARNISH_MEMORY 4500m
+ENV VARNISH_MEMORY 1000m
 
 EXPOSE 80
 CMD ["start-varnishd"]

@@ -20,6 +20,7 @@ services:
 
   certs:
     hostname: certs 
+    container_name: certs 
     image: jrcs/letsencrypt-nginx-proxy-companion
     container_name: certs
     depends_on: [nginxproxy]
@@ -46,6 +47,7 @@ services:
       VIRTUAL_HOST: ${DOMAINS}
       LETSENCRYPT_HOST: ${DOMAINS}
       LETSENCRYPT_EMAIL: ${LETSENCRYPT_EMAIL}
+      HTTPS_METHOD: nohttps
 
   db-wp:
     # see https://wordpress.org/about/requirements/
@@ -102,6 +104,7 @@ services:
 
   pma:
     image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin
     environment:
       PMA_HOST: db-wp
       PMA_PORT: 3306
@@ -116,6 +119,7 @@ services:
 
   mysqlbackup:
     image: selim13/automysqlbackup:2.6-5-debian
+    container_name: automysqlbackup
     volumes:
       - ./db/backup:/backup
     environment:
