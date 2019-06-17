@@ -1,0 +1,6 @@
+# Ignore wordpress app data
+# Ignore wordpress db data on each dir
+# ignore .env file
+# Except this file
+wp-app
+.env
