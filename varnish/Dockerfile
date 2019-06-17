@@ -1,22 +1,29 @@
-FROM debian:jessie
+FROM debian:stretch
 
 RUN \
   useradd -r -s /bin/false varnishd
 
+RUN echo "deb http://deb.debian.org/debian stretch main" >/etc/apt/sources.list
+RUN echo "deb-src http://deb.debian.org/debian stretch main" >/etc/apt/sources.list
+RUN echo "deb http://deb.debian.org/debian stretch main contrib non-free">/etc/apt/sources.list
+
+
 # Install Varnish source build dependencies.
+# RUN printf "deb http://archive.debian.org/debian/ jessie maindeb-src http://archive.debian.org/debian/ jessie maindeb http://security.debian.org jessie/updates maindeb-src http://security.debian.org jessie/updates main" > /etc/apt/sources.list
+
 RUN \
   apt-get update && apt-get install -y --no-install-recommends \
-    automake \
-    build-essential \
-    ca-certificates \
-    curl \
-    libedit-dev \
-    libjemalloc-dev \
-    libncurses-dev \
-    libpcre3-dev \
-    libtool \
-    pkg-config \
-    python-docutils \
+  automake \
+  build-essential \
+  ca-certificates \
+  curl \
+  libedit-dev \
+  libjemalloc-dev \
+  libncurses-dev \
+  libpcre3-dev \
+  libtool \
+  pkg-config \
+  python-docutils \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
