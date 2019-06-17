@@ -1,0 +1,8 @@
+FROM mcuadros/ofelia:latest
+RUN \
+  apt-get update && apt-get install -y --no-install-recommends \
+  bsdmainutils \
+  && apt-get clean \
+  && rm -rf /var/lib/apt/lists/*
+
+COPY imageoptimizer.sh /usr/local/bin/imageoptimizer.sh

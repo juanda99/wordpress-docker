@@ -77,6 +77,7 @@ services:
     volumes:
       - ./config/php.conf.ini:/usr/local/etc/php/conf.d/conf.ini
       - ./wp-app:/var/www/html # Full wordpress project
+      - ./script:/var/www/html/script # image optimizer, will be run through ofelia crontab
     environment:
       WORDPRESS_DB_HOST: db-wp:3306
       WORDPRESS_DB_USER: "${MYSQL_USER}"
@@ -132,6 +133,12 @@ services:
       - db-wp
     networks:
       - backend
+  crontab:
+    container_name: crontab
+        build:
+      context: ./varnish
+    volumes:
+      - ./config/config.ini:/etc/ofelia/config.ini
 
 networks:
   frontend:
