@@ -1,0 +1,139 @@
+version: "3.3"
+
+services:
+  nginx-proxy:
+    hostname: nginx-proxy
+    image: jwilder/nginx-proxy
+    container_name: nginx-proxy
+    labels:
+      com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy: "true"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - "/var/run/docker.sock:/tmp/docker.sock:ro"
+      - "./vhost.d:/etc/nginx/vhost.d"
+      - "./certs:/etc/nginx/certs:ro"
+      - html:/usr/share/nginx/html
+    networks:
+      - frontend
+
+  letsencrypt:
+    hostname: letsencrypt
+    image: jrcs/letsencrypt-nginx-proxy-companion
+    container_name: letsencrypt
+    depends_on: [nginx-proxy]
+    volumes:
+      - "./certs:/etc/nginx/certs:rw"
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./vhost.d:/etc/nginx/vhost.d"
+      - html:/usr/share/nginx/html
+    networks:
+      - frontend
+
+  varnish:
+    hostname: varnish
+    container_name: varnish
+    build:
+      context: ./varnish
+    networks:
+      - frontend
+    depends_on:
+      - wp
+    environment:
+      VARNISH_BACKEND_HOST: wp
+      VARNISH_BACKEND_PORT: 80
+      VIRTUAL_HOST: ${DOMAINS}
+      LETSENCRYPT_HOST: ${DOMAINS}
+      LETSENCRYPT_EMAIL: ${LETSENCRYPT_EMAIL}
+
+  db-wp:
+    # see https://wordpress.org/about/requirements/
+    image: mysql:5.7
+    hostname: db-wp
+    container_name: db-wp
+    volumes:
+      - ./db/init-db:/docker-entrypoint-initdb.d
+      - ./db/data:/var/lib/mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
+      MYSQL_DATABASE: "${MYSQL_DATABASE}"
+      MYSQL_USER: "${MYSQL_USER}"
+      MYSQL_PASSWORD: "${MYSQL_PASSWORD}"
+    networks:
+      - backend
+
+  wp:
+    # see https://wordpress.org/about/requirements/
+    image: wordpress:5.2.1-php7.3-apache
+    depends_on:
+      - db-wp
+    hostname: wp
+    container_name: wp
+    restart: always
+    volumes:
+      - ./config/php.conf.ini:/usr/local/etc/php/conf.d/conf.ini
+      - ./wp-app:/var/www/html # Full wordpress project
+    environment:
+      WORDPRESS_DB_HOST: db-wp:3306
+      WORDPRESS_DB_USER: "${MYSQL_USER}"
+      WORDPRESS_DB_PASSWORD: "${MYSQL_PASSWORD}"
+      WORDPRESS_DB_NAME: "${MYSQL_DATABASE}"
+    networks:
+      - frontend
+      - backend
+
+  wp-cli:
+    image: wordpress:cli
+    hostname: wp-cli
+    container_name: wp-cli
+    user: xfs
+    environment:
+      DB_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
+    volumes:
+      - ./config/php.conf.ini:/usr/local/etc/php/conf.d/conf.ini
+      - ./wp-app:/var/www/html
+    depends_on:
+      - db-wp
+      - wp
+    networks:
+      - backend
+
+  pma:
+    image: phpmyadmin/phpmyadmin
+    environment:
+      PMA_HOST: db-wp
+      PMA_PORT: 3306
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
+    ports:
+      - "8080:80"
+    links:
+      - db-wp:db-wp
+    networks:
+      - frontend
+      - backend
+
+  mysqlbackup:
+    image: selim13/automysqlbackup:2.6-5-debian
+    volumes:
+      - ./db/backup:/backup
+    environment:
+      USERNAME: root
+      PASSWORD: "${MYSQL_ROOT_PASSWORD}"
+      DBHOST: mysql
+      DBEXCLUDE: "performance_schema information_schema mysql sys"
+      CRON_SCHEDULE: "0 3 * * *"
+    depends_on:
+      - db-wp
+    networks:
+      - backend
+
+networks:
+  frontend:
+    driver: bridge
+  backend:
+    driver: bridge
+
+volumes:
+  html:
