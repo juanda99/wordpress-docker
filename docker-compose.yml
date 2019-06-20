@@ -126,7 +126,7 @@ services:
     environment:
       USERNAME: root
       PASSWORD: "${MYSQL_ROOT_PASSWORD}"
-      DBHOST: mysql
+      DBHOST: dw-wp
       DBEXCLUDE: "performance_schema information_schema mysql sys"
       CRON_SCHEDULE: "0 3 * * *"
     depends_on:
