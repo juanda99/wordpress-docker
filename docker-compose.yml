@@ -126,19 +126,13 @@ services:
     environment:
       USERNAME: root
       PASSWORD: "${MYSQL_ROOT_PASSWORD}"
-      DBHOST: dw-wp
+      DBHOST: db-wp
       DBEXCLUDE: "performance_schema information_schema mysql sys"
       CRON_SCHEDULE: "0 3 * * *"
     depends_on:
       - db-wp
     networks:
       - backend
-  crontab:
-    container_name: crontab
-        build:
-      context: ./varnish
-    volumes:
-      - ./config/config.ini:/etc/ofelia/config.ini
 
 networks:
   frontend:
